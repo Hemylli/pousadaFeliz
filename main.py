@@ -2,6 +2,8 @@ from app.models.hospede import Hospede
 from app.models.quarto import Quarto
 from app.models.reserva import Reserva
 from controller.database import Database
+from app.gui.main_window import MainWindow
+import tkinter as tk
 
 def create_objects():
     hospede = Hospede(1, "Ana Souza", "12345678900", "21999999999", "ana@gmail.com")
@@ -35,3 +37,6 @@ def bd_conection():
 
 if __name__ == "__main__":
     bd_conection()
+    root = tk.Tk()
+    app = MainWindow(root)
+    root.mainloop()
