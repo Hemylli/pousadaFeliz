@@ -1,0 +1,25 @@
+# Hóspedes
+1;Ana Souza;12345678900;21999999999;ana@gmail.com
+2;Carlos Lima;98765432100;21988888888;carlos@gmail.com
+3;Fernanda Silva;45678912300;21977777777;fernanda@gmail.com
+4;João Pereira;32165498700;21966666666;joao@gmail.com
+5;Mariana Costa;65498732100;21955555555;mariana@gmail.com
+6;Roberto Alves;78945612300;21944444444;roberto@gmail.com
+7;Patrícia Mendes;14725836900;21933333333;patricia@gmail.com
+8;Lucas Oliveira;36925814700;21922222222;lucas@gmail.com
+9;Beatriz Ramos;25814736900;21911111111;beatriz@gmail.com
+10;Gabriel Fernandes;15935748600;21900000000;gabriel@gmail.com
+
+# Quartos
+1;101;Simples;150.00;Disponível
+2;102;Duplo;200.00;Disponível
+3;201;Luxo;350.00;Ocupado
+4;202;Master;500.00;Disponível
+5;301;Suíte Premium;750.00;Disponível
+
+# Reservas
+1;1;2;2025-06-01;2025-06-05;Ativa
+2;2;3;2025-07-10;2025-07-15;Finalizada
+3;5;1;2025-08-05;2025-08-10;Ativa
+4;6;4;2025-09-12;2025-09-18;Cancelada
+5;7;5;2025-10-01;2025-10-07;Ativa
