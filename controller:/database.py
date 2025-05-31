@@ -127,7 +127,82 @@ class Database:
     def buscar_quarto_por_id(self, id):
         self.cursor.execute('SELECT * FROM quartos WHERE id = ?', (id,))
         r = self.cursor.fetchone()
-        return Quarto(*r) if r else None
+        return Quarto(*r) if r else 
+
+    # ----------------------------
+    # ALTERAÇÕES DE DADOS
+    # ----------------------------
+
+    def alterar_status_reserva(self, reserva_id, novo_status):
+        self.cursor.execute('''
+            UPDATE reservas SET status = ? WHERE id = ?
+        ''', (novo_status, reserva_id))
+        self.conexao.commit()
+
+    def alterar_status_quarto(self, quarto_id, novo_status):
+        self.cursor.execute('''
+            UPDATE quartos SET status = ? WHERE id = ?
+        ''', (novo_status, quarto_id))
+        self.conexao.commit()
+
+    def alterar_hospede(self, hospede_id, nome=None, cpf=None, telefone=None, email=None):
+        self.cursor.execute('SELECT * FROM hospedes WHERE id = ?', (hospede_id,))
+        hospede = self.cursor.fetchone()
+        if not hospede:
+            print("Hóspede não encontrado.")
+            return
+
+        novo_nome = nome if nome else hospede[1]
+        novo_cpf = cpf if cpf else hospede[2]
+        novo_telefone = telefone if telefone else hospede[3]
+        novo_email = email if email else hospede[4]
+
+        self.cursor.execute('''
+            UPDATE hospedes
+            SET nome = ?, cpf = ?, telefone = ?, email = ?
+            WHERE id = ?
+        ''', (novo_nome, novo_cpf, novo_telefone, novo_email, hospede_id))
+        self.conexao.commit()
+
+    # ----------------------------
+    # VERIFICAR DISPONIBILIDADE
+    # ----------------------------
+
+    def verificar_disponibilidade_quarto(self, quarto_id, data_entrada, data_saida):
+        """
+        Verifica se um quarto está disponível entre data_entrada e data_saida.
+        Retorna True se disponível, False se ocupado.
+        """
+        self.cursor.execute('''
+            SELECT * FROM reservas
+            WHERE quarto_id = ?
+            AND status = 'Ativa'
+            AND (
+                (data_entrada <= ? AND data_saida > ?) OR
+                (data_entrada < ? AND data_saida >= ?) OR
+                (data_entrada >= ? AND data_saida <= ?)
+            )
+        ''', (
+            quarto_id, data_entrada, data_entrada,
+            data_saida, data_saida,
+            data_entrada, data_saida
+        ))
+
+        conflitos = self.cursor.fetchall()
+        return len(conflitos) == 0
+
+    def listar_periodos_ocupados_quarto(self, quarto_id):
+        """
+        Retorna uma lista de tuplas (data_entrada, data_saida)
+        com os períodos já reservados desse quarto.
+        """
+        self.cursor.execute('''
+            SELECT data_entrada, data_saida
+            FROM reservas
+            WHERE quarto_id = ? AND status = 'Ativa'
+        ''', (quarto_id,))
+
+        return self.cursor.fetchall()
 
     # ----------------------------
     # FECHAR CONEXÃO

@@ -15,9 +15,9 @@ def create_objects():
 
 
 def bd_conection():
-    db = Database("data/dados.txt")
-    db.carregar_dados()
+    db = Database()
 
+    # Listando dados
     print("=== HÓSPEDES ===")
     for h in db.listar_hospedes():
         print(h)
@@ -29,6 +29,8 @@ def bd_conection():
     print("\n=== RESERVAS ===")
     for r in db.listar_reservas():
         print(r)
+
+    db.fechar_conexao()
 
 
 if __name__ == "__main__":
