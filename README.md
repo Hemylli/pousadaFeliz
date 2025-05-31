@@ -7,33 +7,33 @@ Sistema de gerenciamento para uma pousada, desenvolvido em Python com interface 
 
 ## 🗂️ Estrutura do Projeto
 
-pousada_feliz/
-│
-├── app/ # 🖥️ Interface gráfica e modelos
-│ ├── init.py
-│ ├── models/ # 🎭 Modelos: Hospede, Quarto, Reserva
-│ │ ├── init.py
-│ │ ├── hospede.py
-│ │ ├── quarto.py
-│ │ └── reserva.py
-│ │
-│ └── gui/ # 🎨 Interface gráfica com Tkinter
-│ ├── init.py
-│ ├── main_window.py
-│ ├── tela_login.py
-│ ├── tela_reservas.py
-│ ├── tela_quartos.py
-│ └── tela_clientes.py
-│
-├── controller/ # 🔌 Conexão e operações com o banco de dados
-│ ├── init.py
-│ └── database.py
-│
-├── data/ # 📁 Banco de dados e arquivos de dados
-│ └── dados.db
-│
-├── main.py # 🚀 Arquivo principal
-└── README.md # 📄 Documentação
+pousada_feliz/  
+│  
+├── app/ # 🖥️ Interface gráfica e modelos  
+│ ├── init.py  
+│ ├── models/ # 🎭 Modelos: Hospede, Quarto, Reserva  
+│ │ ├── init.py  
+│ │ ├── hospede.py  
+│ │ ├── quarto.py  
+│ │ └── reserva.py  
+│ │  
+│ └── gui/ # 🎨 Interface gráfica com Tkinter  
+│ ├── init.py  
+│ ├── main_window.py  
+│ ├── tela_login.py  
+│ ├── tela_reservas.py  
+│ ├── tela_quartos.py  
+│ └── tela_clientes.py  
+│  
+├── controller/ # 🔌 Conexão e operações com o banco de dados  
+│ ├── init.py  
+│ └── database.py  
+│  
+├── data/ # 📁 Banco de dados e arquivos de dados  
+│ └── dados.db  
+│  
+├── main.py # 🚀 Arquivo principal  
+└── README.md # 📄 Documentação  
 
 
 ## 🚀 Funcionalidades
