@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from .main_window import MainWindow
+from controller import database
 
 
 class TelaLogin:
@@ -22,14 +23,14 @@ class TelaLogin:
         self.botao_login = tk.Button(master, text="Entrar", command=self.verificar_login)
         self.botao_login.pack(pady=20)
 
-    def verificar_login(self):
+    def realizar_login(self):
         usuario = self.entry_usuario.get()
         senha = self.entry_senha.get()
 
-        if usuario == "admin" and senha == "admin":
-            self.master.destroy()  # Fecha a janela de login
-            root = tk.Tk()
-            MainWindow(root)
-            root.mainloop()
+        if database.autenticar_funcionario(usuario, senha):
+            messagebox.showinfo("Login", "Login realizado com sucesso!")
+            self.root.destroy()
+            self.abrir_main_window()
         else:
-            messagebox.showerror("Erro", "Usuário ou senha incorretos!")
+            messagebox.showerror("Erro", "Usuário ou senha incorretos.")
+

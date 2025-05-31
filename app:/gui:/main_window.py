@@ -28,6 +28,9 @@ class MainWindow:
         menu_gerenciar.add_command(label="Clientes", command=self.abrir_tela_clientes)
         menu_gerenciar.add_separator()
         menu_gerenciar.add_command(label="Sair", command=self.master.quit)
+        btn_funcionarios = tk.Button(self.root, text="Funcionários", width=20, height=2, command=self.abrir_tela_funcionarios)
+        btn_funcionarios.place(x=350, y=100)  # Ajuste conforme seu layout
+
 
     def limpar_tela(self):
         for widget in self.container.winfo_children():
@@ -44,3 +47,7 @@ class MainWindow:
     def abrir_tela_clientes(self):
         self.limpar_tela()
         TelaClientes(self.container)
+
+    def abrir_tela_funcionarios(self):
+    from app.gui.tela_funcionarios import TelaFuncionarios
+    TelaFuncionarios()

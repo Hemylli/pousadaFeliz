@@ -44,6 +44,16 @@ class Database:
             )
         ''')
 
+        # Tabela Funcionarios
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS funcionarios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                usuario TEXT UNIQUE NOT NULL,
+                senha TEXT NOT NULL
+            );
+        """)
+
         self.conexao.commit()
 
     # ----------------------------
@@ -203,6 +213,61 @@ class Database:
         ''', (quarto_id,))
 
         return self.cursor.fetchall()
+
+    # ----------------------------
+    # CRUD FUNCIONÁRIOS
+    # ----------------------------
+    # Cadastrar funcionário
+    def cadastrar_funcionario(nome, usuario, senha):
+        conn = conectar()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("INSERT INTO funcionarios (nome, usuario, senha) VALUES (?, ?, ?)", (nome, usuario, senha))
+            conn.commit()
+            return True
+        except sqlite3.IntegrityError:
+            return False
+        finally:
+            desconectar(conn)
+
+    # Listar todos os funcionários
+    def listar_funcionarios():
+        conn = conectar()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM funcionarios")
+        funcionarios = cursor.fetchall()
+        desconectar(conn)
+        return funcionarios
+
+    # Atualizar funcionário
+    def atualizar_funcionario(id_funcionario, nome, usuario, senha):
+        conn = conectar()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE funcionarios 
+            SET nome = ?, usuario = ?, senha = ? 
+            WHERE id = ?
+        """, (nome, usuario, senha, id_funcionario))
+        conn.commit()
+        desconectar(conn)
+
+    # Excluir funcionário
+    def excluir_funcionario(id_funcionario):
+        conn = conectar()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM funcionarios WHERE id = ?", (id_funcionario,))
+        conn.commit()
+        desconectar(conn)
+
+    # Autenticar login
+    def autenticar_funcionario(usuario, senha):
+        conn = conectar()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM funcionarios WHERE usuario = ? AND senha = ?", (usuario, senha))
+        funcionario = cursor.fetchone()
+        desconectar(conn)
+        return funcionario is not None
+
 
     # ----------------------------
     # FECHAR CONEXÃO
