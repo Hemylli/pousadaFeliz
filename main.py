@@ -7,7 +7,6 @@ import tkinter as tk
 from controller.criar_database import criar_e_popular_database 
 
 def bd_conection():
-    # Esta função agora é mais para testar a conexão e listagem após a criação
     db = Database() # Conecta ao banco de dados já populado
 
     print("=== HÓSPEDES ===")

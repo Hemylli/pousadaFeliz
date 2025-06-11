@@ -1,22 +1,28 @@
 import sqlite3
+import os
 from app.models.hospede import Hospede
 from app.models.quarto import Quarto
 from app.models.reserva import Reserva
 from app.models.funcionario import Funcionario 
 
 class Database:
-    def __init__(self, db_path="data/pousada.db"):
-        self.db_path = db_path
+    def __init__(self, db_name="pousada.db"):
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        data_dir = os.path.join(base_dir, 'data')
+        
+        os.makedirs(data_dir, exist_ok=True)
+        
+        self.db_path = os.path.join(data_dir, db_name) 
         self.conexao = sqlite3.connect(self.db_path)
         self.cursor = self.conexao.cursor()
-        self.criar_tabelas()
+        self.criar_tabelas() 
 
     def criar_tabelas(self):
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS hospedes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 nome TEXT NOT NULL,
-                cpf TEXT NOT NULL UNIQUE,
+                cpf TEXT NOT NULL,
                 telefone TEXT NOT NULL,
                 email TEXT NOT NULL
             )

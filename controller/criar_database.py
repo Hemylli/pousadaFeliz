@@ -1,17 +1,14 @@
 import sqlite3
 import os
 import datetime 
+
 from controller.database import Database 
 
-def criar_e_popular_database(db_name="pousada.db"):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.join(base_dir, 'data')
-    
-    os.makedirs(data_dir, exist_ok=True)
-    
-    db_path = os.path.join(data_dir, db_name)
+def criar_e_popular_database(db_name="pousada.db"): 
+    temp_db_instance = Database(db_name) 
+    db_path = temp_db_instance.db_path
+    temp_db_instance.fechar_conexao() # Fecha a conexão temporária
 
-    # Se o arquivo do banco de dados já existe, remove-o para garantir uma recriação limpa.
     if os.path.exists(db_path):
         try:
             os.remove(db_path)
