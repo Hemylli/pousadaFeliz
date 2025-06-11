@@ -5,18 +5,150 @@ from app.models.hospede import Hospede
 from app.models.quarto import Quarto
 from app.models.reserva import Reserva
 
+class TelaReservas:
+    def __init__(self, master, db: Database):
+        self.master = master
+        self.db = db
+        self.reserva_selecionada_id = None
+
+        self.primary_bg = "#a5f0f3"  
+        self.secondary_bg = "#a6b8f3" 
+        self.text_color = "#333333"  
+        
+        frame = tk.Frame(master, bg=self.primary_bg)
+        frame.pack(fill="both", expand=True)
+
+        label = tk.Label(frame, text="Gerenciamento de Reservas", font=("Arial", 18, "bold"),
+                         bg=self.primary_bg, fg=self.text_color)
+        label.pack(pady=10)
+
+        colunas = ("ID", "Hóspede", "Quarto", "Check-in", "Check-out", "Status")
+        self.tabela = ttk.Treeview(frame, columns=colunas, show="headings")
+
+        for coluna in colunas:
+            self.tabela.heading(coluna, text=coluna)
+            self.tabela.column(coluna, width=100)
+
+        self.tabela.pack(fill="both", expand=True, padx=20, pady=20)
+        self.tabela.bind("<ButtonRelease-1>", self.selecionar_reserva)
+
+        botoes_frame = tk.Frame(frame, bg=self.primary_bg)
+        botoes_frame.pack(pady=10)
+
+        ttk.Button(botoes_frame, text="Nova Reserva", command=self.abrir_tela_nova_reserva).grid(row=0, column=0, padx=5)
+        ttk.Button(botoes_frame, text="Editar Reserva", command=self.editar_reserva).grid(row=0, column=1, padx=5)
+        ttk.Button(botoes_frame, text="Cancelar Reserva", command=self.cancelar_reserva).grid(row=0, column=2, padx=5)
+        ttk.Button(botoes_frame, text="Check-out", command=self.realizar_checkout).grid(row=0, column=3, padx=5)
+
+        self.carregar_reservas()
+
+    def carregar_reservas(self):
+        for item in self.tabela.get_children():
+            self.tabela.delete(item)
+
+        try:
+            reservas = self.db.listar_reservas()
+            for r in reservas:
+                self.tabela.insert("", "end", values=(
+                    r.id,
+                    r.hospede.nome,
+                    r.quarto.numero,
+                    r.data_entrada,
+                    r.data_saida,
+                    r.status
+                ), iid=r.id)
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao carregar reservas: {e}")
+
+    def selecionar_reserva(self, event):
+        selected_item = self.tabela.focus()
+        if selected_item:
+            self.reserva_selecionada_id = self.tabela.item(selected_item, 'iid')
+        else:
+            self.reserva_selecionada_id = None
+
+    def abrir_tela_nova_reserva(self):
+        TelaNovaReserva(self.master, self.db, self.carregar_reservas)
+
+    def editar_reserva(self):
+        if not hasattr(self, 'reserva_selecionada_id') or not self.reserva_selecionada_id:
+            messagebox.showwarning("Atenção", "Selecione uma reserva para editar.")
+            return
+        
+        reserva_para_editar = None
+        for r in self.db.listar_reservas():
+            if r.id == int(self.reserva_selecionada_id):
+                reserva_para_editar = r
+                break
+        
+        if reserva_para_editar:
+            TelaNovaReserva(self.master, self.db, self.carregar_reservas, reserva_para_editar)
+        else:
+            messagebox.showerror("Erro", "Reserva não encontrada para edição.")
+
+    def cancelar_reserva(self):
+        if not hasattr(self, 'reserva_selecionada_id') or not self.reserva_selecionada_id:
+            messagebox.showwarning("Atenção", "Selecione uma reserva para cancelar.")
+            return
+
+        confirmacao = messagebox.askyesno("Confirmar Cancelamento", "Tem certeza que deseja cancelar esta reserva?")
+        if confirmacao:
+            try:
+                self.db.alterar_status_reserva(self.reserva_selecionada_id, "Cancelada")
+                reserva = None
+                for r in self.db.listar_reservas():
+                    if r.id == int(self.reserva_selecionada_id):
+                        reserva = r
+                        break
+                if reserva and reserva.status == "Ativa":
+                     self.db.alterar_status_quarto(reserva.quarto.id, "Disponível")
+
+                messagebox.showinfo("Sucesso", "Reserva cancelada com sucesso!")
+                self.carregar_reservas()
+            except Exception as e:
+                messagebox.showerror("Erro", f"Erro ao cancelar reserva: {e}")
+
+    def realizar_checkout(self):
+        if not hasattr(self, 'reserva_selecionada_id') or not self.reserva_selecionada_id:
+            messagebox.showwarning("Atenção", "Selecione uma reserva para realizar o check-out.")
+            return
+
+        confirmacao = messagebox.askyesno("Confirmar Check-out", "Tem certeza que deseja realizar o check-out desta reserva?")
+        if confirmacao:
+            try:
+                self.db.alterar_status_reserva(self.reserva_selecionada_id, "Finalizada")
+                reserva = None
+                for r in self.db.listar_reservas():
+                    if r.id == int(self.reserva_selecionada_id):
+                        reserva = r
+                        break
+                if reserva:
+                    self.db.alterar_status_quarto(reserva.quarto.id, "Disponível")
+
+                messagebox.showinfo("Sucesso", "Check-out realizado com sucesso!")
+                self.carregar_reservas()
+            except Exception as e:
+                messagebox.showerror("Erro", f"Erro ao realizar check-out: {e}")
+
 
 class TelaNovaReserva:
     def __init__(self, master, db: Database, callback_carregar_reservas, reserva_para_editar=None):
         self.master = master
         self.db = db
-        self.callback_carregar_reservas = callback_carregar_reservas # Função para recarregar a tabela principal
-        self.reserva_para_editar = reserva_para_editar # Objeto Reserva se estiver em modo de edição
+        self.callback_carregar_reservas = callback_carregar_reservas
+        self.reserva_para_editar = reserva_para_editar
 
+        self.primary_bg = "#a5f0f3"
+        self.secondary_bg = "#a6b8f3"
+        self.text_color = "#333333"
+
+        # Não precisa de _configure_styles aqui, os estilos ttk são globais da MainWindow
+        
         self.root = tk.Toplevel(master)
         self.root.title("Nova Reserva" if not reserva_para_editar else "Editar Reserva")
         self.root.geometry("400x450")
         self.root.resizable(False, False)
+        self.root.config(bg=self.primary_bg)
 
         self.criar_widgets()
         self.carregar_dados_iniciais()
@@ -24,65 +156,53 @@ class TelaNovaReserva:
             self.preencher_dados_edicao()
 
     def criar_widgets(self):
-        form_frame = tk.Frame(self.root, padx=20, pady=20)
+        form_frame = tk.Frame(self.root, padx=20, pady=20, bg=self.primary_bg)
         form_frame.pack(fill="both", expand=True)
 
-        # Hóspede
-        tk.Label(form_frame, text="Hóspede:").grid(row=0, column=0, sticky="w", pady=5)
+        tk.Label(form_frame, text="Hóspede:", bg=self.primary_bg, fg=self.text_color).grid(row=0, column=0, sticky="w", pady=5)
         self.combo_hospede = ttk.Combobox(form_frame, width=40, state="readonly")
         self.combo_hospede.grid(row=0, column=1, pady=5)
-        self.hospedes_dict = {} # Para mapear nome para objeto/id
+        self.hospedes_dict = {}
 
-        # Quarto
-        tk.Label(form_frame, text="Quarto (Número - Tipo - Preço):").grid(row=1, column=0, sticky="w", pady=5)
+        tk.Label(form_frame, text="Quarto (Número - Tipo - Preço):", bg=self.primary_bg, fg=self.text_color).grid(row=1, column=0, sticky="w", pady=5)
         self.combo_quarto = ttk.Combobox(form_frame, width=40, state="readonly")
         self.combo_quarto.grid(row=1, column=1, pady=5)
-        self.quartos_dict = {} # Para mapear string para objeto/id
+        self.quartos_dict = {}
 
-        # Data de Entrada
-        tk.Label(form_frame, text="Data de Entrada (AAAA-MM-DD):").grid(row=2, column=0, sticky="w", pady=5)
-        self.entry_data_entrada = tk.Entry(form_frame, width=30)
+        tk.Label(form_frame, text="Data de Entrada (AAAA-MM-DD):", bg=self.primary_bg, fg=self.text_color).grid(row=2, column=0, sticky="w", pady=5)
+        self.entry_data_entrada = ttk.Entry(form_frame, width=30) # Usando ttk.Entry
         self.entry_data_entrada.grid(row=2, column=1, pady=5)
 
-        # Data de Saída
-        tk.Label(form_frame, text="Data de Saída (AAAA-MM-DD):").grid(row=3, column=0, sticky="w", pady=5)
-        self.entry_data_saida = tk.Entry(form_frame, width=30)
+        tk.Label(form_frame, text="Data de Saída (AAAA-MM-DD):", bg=self.primary_bg, fg=self.text_color).grid(row=3, column=0, sticky="w", pady=5)
+        self.entry_data_saida = ttk.Entry(form_frame, width=30) # Usando ttk.Entry
         self.entry_data_saida.grid(row=3, column=1, pady=5)
 
-        # Status (apenas para edição, nova reserva começa 'Ativa')
         if self.reserva_para_editar:
-            tk.Label(form_frame, text="Status:").grid(row=4, column=0, sticky="w", pady=5)
+            tk.Label(form_frame, text="Status:", bg=self.primary_bg, fg=self.text_color).grid(row=4, column=0, sticky="w", pady=5)
             self.combo_status = ttk.Combobox(form_frame, width=40, state="readonly", 
                                              values=["Ativa", "Finalizada", "Cancelada"])
             self.combo_status.grid(row=4, column=1, pady=5)
 
-
-        # Botão Salvar
-        btn_salvar = tk.Button(form_frame, text="Salvar Reserva", 
-                               command=self.salvar_reserva)
-        btn_salvar.grid(row=5 if not self.reserva_para_editar else 6, column=0, columnspan=2, pady=20)
+        ttk.Button(form_frame, text="Salvar Reserva", command=self.salvar_reserva).grid(row=5 if not self.reserva_para_editar else 6, column=0, columnspan=2, pady=20)
 
     def carregar_dados_iniciais(self):
-        # Carregar Hóspedes
         hospedes = self.db.listar_hospedes()
         hospede_nomes = []
         for h in hospedes:
             display_name = f"{h.nome} ({h.cpf})"
             hospede_nomes.append(display_name)
-            self.hospedes_dict[display_name] = h # Mapeia string exibida para o objeto Hospede
+            self.hospedes_dict[display_name] = h
         self.combo_hospede['values'] = hospede_nomes
 
-        # Carregar Quartos
         quartos = self.db.listar_quartos()
         quarto_info = []
         for q in quartos:
             display_info = f"{q.numero} - {q.tipo} - R${q.preco:.2f} ({q.status})"
             quarto_info.append(display_info)
-            self.quartos_dict[display_info] = q # Mapeia string exibida para o objeto Quarto
+            self.quartos_dict[display_info] = q
         self.combo_quarto['values'] = quarto_info
 
     def preencher_dados_edicao(self):
-        # Preenche os campos com os dados da reserva existente
         hospede_display = f"{self.reserva_para_editar.hospede.nome} ({self.reserva_para_editar.hospede.cpf})"
         quarto_display = f"{self.reserva_para_editar.quarto.numero} - {self.reserva_para_editar.quarto.tipo} - R${self.reserva_para_editar.quarto.preco:.2f} ({self.reserva_para_editar.quarto.status})"
 
@@ -110,7 +230,6 @@ class TelaNovaReserva:
             messagebox.showerror("Erro", "Selecione um hóspede e um quarto válidos.")
             return
 
-        # Validação de datas
         if data_entrada >= data_saida:
             messagebox.showwarning("Atenção", "A data de saída deve ser posterior à data de entrada.")
             return
@@ -124,7 +243,7 @@ class TelaNovaReserva:
            (data_entrada != data_entrada_atual) or \
            (data_saida != data_saida_atual):
             
-            is_available = self.db.verificar_disponibilidade_quarto(quarto_obj.id, data_entrada, data_saida)
+            is_available = self.db.verificar_disponibilidade_quarto(quarto_obj.id, data_entrada, data_saida, self.reserva_para_editar.id if self.reserva_para_editar else None)
             
             if not is_available:
                 messagebox.showwarning("Atenção", "Quarto não disponível para o período selecionado.")
@@ -132,7 +251,6 @@ class TelaNovaReserva:
 
         try:
             if self.reserva_para_editar:
-                # Lógica de edição
                 novo_status = self.combo_status.get()
                 if not novo_status: 
                     novo_status = self.reserva_para_editar.status
@@ -147,21 +265,18 @@ class TelaNovaReserva:
                 )
                 messagebox.showinfo("Sucesso", "Reserva atualizada com sucesso!")
 
-                # Lógica para atualizar status do quarto (liberar quarto antigo, ocupar novo)
                 if self.reserva_para_editar.status == "Ativa" and novo_status in ["Cancelada", "Finalizada"]:
-                    # Se a reserva original era ativa e foi finalizada/cancelada, liberar o quarto antigo
                     self.db.alterar_status_quarto(self.reserva_para_editar.quarto.id, "Disponível")
                 elif self.reserva_para_editar.status != "Ativa" and novo_status == "Ativa":
-                    # Se a reserva era inativa e se tornou ativa, ocupar o novo quarto
-                    self.db.alterar_status_quarto(quarto_obj.id, "Ocupado")
-                elif quarto_obj.id != quarto_atual_id: # Se o quarto da reserva mudou
-                    if self.reserva_para_editar.status == "Ativa": # Se a reserva original era ativa, liberar o quarto antigo
+                     self.db.alterar_status_quarto(quarto_obj.id, "Ocupado")
+                elif quarto_obj.id != quarto_atual_id: 
+                    if self.reserva_para_editar.status == "Ativa": 
                         self.db.alterar_status_quarto(self.reserva_para_editar.quarto.id, "Disponível")
-                    if novo_status == "Ativa": # Se a nova reserva é ativa, ocupar o novo quarto
+                    if novo_status == "Ativa": 
                         self.db.alterar_status_quarto(quarto_obj.id, "Ocupado")
 
 
-            else: 
+            else:
                 nova_reserva = Reserva(
                     id=None,
                     hospede=hospede_obj,

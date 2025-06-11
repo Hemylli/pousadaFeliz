@@ -4,10 +4,14 @@ import datetime
 
 from controller.database import Database 
 
-def criar_e_popular_database(db_name="pousada.db"): 
-    temp_db_instance = Database(db_name) 
-    db_path = temp_db_instance.db_path
-    temp_db_instance.fechar_conexao() # Fecha a conexão temporária
+def criar_e_popular_database(db_name="pousada.db"):
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(base_dir) # Sobe para a raiz do projeto (pousadaFeliz/)
+    data_dir = os.path.join(project_root, 'data') # Pasta data na raiz
+    
+    os.makedirs(data_dir, exist_ok=True)
+    
+    db_path = os.path.join(data_dir, db_name)
 
     if os.path.exists(db_path):
         try:
@@ -19,11 +23,10 @@ def criar_e_popular_database(db_name="pousada.db"):
 
     print(f"Banco de dados '{db_name}' não encontrado ou foi removido. Criando e populando...")
 
-    # Instancia o Database
+    # Instancia o Database (que criará as tabelas no novo DB vazio)
     db = Database(db_name) 
 
     # --- INÍCIO DA POPULAÇÃO DE DADOS ---
-    # HÓSPEDES
     hospedes_data = [
         ("Ana Silva", "111.111.111-11", "(11) 98765-4321", "ana.silva@email.com"),
         ("Bruno Costa", "222.222.222-22", "(21) 99876-5432", "bruno.costa@email.com"),
@@ -37,7 +40,6 @@ def criar_e_popular_database(db_name="pousada.db"):
     db.cursor.executemany("INSERT INTO hospedes (nome, cpf, telefone, email) VALUES (?, ?, ?, ?)", hospedes_data)
     db.conexao.commit()
 
-    # QUARTOS
     quartos_data = [
         (101, "Simples", 150.00, "Disponível"),
         (102, "Simples", 150.00, "Disponível"),
@@ -50,7 +52,6 @@ def criar_e_popular_database(db_name="pousada.db"):
     db.cursor.executemany("INSERT INTO quartos (numero, tipo, preco, status) VALUES (?, ?, ?, ?)", quartos_data)
     db.conexao.commit()
 
-    # FUNCIONÁRIOS
     funcionarios_data = [
         ("Admin", "admin", "admin123"), 
         ("Gerente", "gerente", "senha123"),
@@ -59,7 +60,6 @@ def criar_e_popular_database(db_name="pousada.db"):
     db.cursor.executemany("INSERT INTO funcionarios (nome, usuario, senha) VALUES (?, ?, ?)", funcionarios_data)
     db.conexao.commit()
 
-    # RESERVAS
     def _get_hospede_id_by_cpf(cursor, cpf):
         cursor.execute("SELECT id FROM hospedes WHERE cpf=?", (cpf,))
         result = cursor.fetchone()
@@ -99,7 +99,7 @@ def criar_e_popular_database(db_name="pousada.db"):
         reservas_data.append((carla_mendes_id, quarto_302_id, data_futura_curta.strftime("%Y-%m-%d"), proxima_semana.strftime("%Y-%m-%d"), "Cancelada"))
     
     if daniel_rocha_id and quarto_102_id: 
-        reservas_data.append((daniel_rocha_id, quarto_102_id, hoje.strftime("%Y-%m-%d"), duas_semanas.strftime("%Y-%m-%d"), "Ativa")) # Ajustado para hoje para testar conflito
+        reservas_data.append((daniel_rocha_id, quarto_102_id, hoje.strftime("%Y-%m-%d"), duas_semanas.strftime("%Y-%m-%d"), "Ativa"))
 
     if reservas_data:
         db.cursor.executemany("INSERT INTO reservas (hospede_id, quarto_id, data_entrada, data_saida, status) VALUES (?, ?, ?, ?, ?)", reservas_data)

@@ -7,42 +7,47 @@ class TelaClientes:
     def __init__(self, master, db: Database):
         self.master = master
         self.db = db
-        self.hospede_selecionado_id = None
+        self.hospede_selecionado_id = None 
 
-        frame = tk.Frame(master)
+        self.primary_bg = "#a5f0f3"  
+        self.secondary_bg = "#a6b8f3" 
+        self.text_color = "#333333"  
+        
+        frame = tk.Frame(master, bg=self.primary_bg)
         frame.pack(fill="both", expand=True)
 
-        label = tk.Label(frame, text="Gerenciamento de Clientes", font=("Arial", 18))
+        label = tk.Label(frame, text="Gerenciamento de Clientes", font=("Arial", 18, "bold"),
+                         bg=self.primary_bg, fg=self.text_color)
         label.pack(pady=10)
 
         # Campos de Entrada para Adicionar/Editar
-        form_frame = tk.Frame(frame)
+        form_frame = tk.Frame(frame, bg=self.primary_bg)
         form_frame.pack(pady=10)
 
-        tk.Label(form_frame, text="Nome:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        self.entry_nome = tk.Entry(form_frame, width=40)
+        tk.Label(form_frame, text="Nome:", bg=self.primary_bg, fg=self.text_color).grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        self.entry_nome = ttk.Entry(form_frame, width=40)
         self.entry_nome.grid(row=0, column=1, padx=5, pady=5)
 
-        tk.Label(form_frame, text="CPF:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        self.entry_cpf = tk.Entry(form_frame, width=40)
+        tk.Label(form_frame, text="CPF:", bg=self.primary_bg, fg=self.text_color).grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        self.entry_cpf = ttk.Entry(form_frame, width=40) 
         self.entry_cpf.grid(row=1, column=1, padx=5, pady=5)
 
-        tk.Label(form_frame, text="Telefone:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
-        self.entry_telefone = tk.Entry(form_frame, width=40)
+        tk.Label(form_frame, text="Telefone:", bg=self.primary_bg, fg=self.text_color).grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        self.entry_telefone = ttk.Entry(form_frame, width=40) 
         self.entry_telefone.grid(row=2, column=1, padx=5, pady=5)
 
-        tk.Label(form_frame, text="Email:").grid(row=3, column=0, padx=5, pady=5, sticky="w")
-        self.entry_email = tk.Entry(form_frame, width=40)
+        tk.Label(form_frame, text="Email:", bg=self.primary_bg, fg=self.text_color).grid(row=3, column=0, padx=5, pady=5, sticky="w")
+        self.entry_email = ttk.Entry(form_frame, width=40) 
         self.entry_email.grid(row=3, column=1, padx=5, pady=5)
 
         # Botões de Ação
-        botoes_acao_frame = tk.Frame(frame)
+        botoes_acao_frame = tk.Frame(frame, bg=self.primary_bg)
         botoes_acao_frame.pack(pady=10)
 
-        tk.Button(botoes_acao_frame, text="Adicionar Cliente", width=15, command=self.adicionar_hospede).grid(row=0, column=0, padx=5)
-        tk.Button(botoes_acao_frame, text="Atualizar Cliente", width=15, command=self.atualizar_hospede).grid(row=0, column=1, padx=5)
-        tk.Button(botoes_acao_frame, text="Excluir Cliente", width=15, command=self.excluir_hospede).grid(row=0, column=2, padx=5)
-        tk.Button(botoes_acao_frame, text="Limpar Campos", width=15, command=self.limpar_campos).grid(row=0, column=3, padx=5)
+        ttk.Button(botoes_acao_frame, text="Adicionar Cliente", command=self.adicionar_hospede).grid(row=0, column=0, padx=5)
+        ttk.Button(botoes_acao_frame, text="Atualizar Cliente", command=self.atualizar_hospede).grid(row=0, column=1, padx=5)
+        ttk.Button(botoes_acao_frame, text="Excluir Cliente", command=self.excluir_hospede).grid(row=0, column=2, padx=5)
+        ttk.Button(botoes_acao_frame, text="Limpar Campos", command=self.limpar_campos).grid(row=0, column=3, padx=5)
 
 
         # Tabela de clientes
@@ -66,14 +71,13 @@ class TelaClientes:
         self.carregar_hospedes()
 
         # Área para envio de mensagem 
-        label_mensagem = tk.Label(frame, text="Enviar Mensagem para Cliente Selecionado:")
+        label_mensagem = tk.Label(frame, text="Enviar Mensagem para Cliente Selecionado:", bg=self.primary_bg, fg=self.text_color)
         label_mensagem.pack(pady=5)
 
         self.texto_mensagem = tk.Text(frame, height=3, width=80)
         self.texto_mensagem.pack(pady=5)
 
-        botao_enviar = tk.Button(frame, text="Enviar Mensagem", width=15, command=self.enviar_mensagem)
-        botao_enviar.pack(pady=5)
+        ttk.Button(frame, text="Enviar Mensagem", command=self.enviar_mensagem).pack(pady=5)
 
     def carregar_hospedes(self):
         for item in self.tabela.get_children():
@@ -97,9 +101,9 @@ class TelaClientes:
         selected_item = self.tabela.focus()
         if selected_item:
             valores = self.tabela.item(selected_item, 'values')
-            self.hospede_selecionado_id = valores[0]
+            self.hospede_selecionado_id = valores[0] 
 
-            self.limpar_campos()
+            self.limpar_campos() 
             self.entry_nome.insert(0, valores[1])
             self.entry_cpf.insert(0, valores[2])
             self.entry_telefone.insert(0, valores[3])

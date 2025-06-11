@@ -7,43 +7,47 @@ class TelaQuartos:
     def __init__(self, master, db: Database):
         self.master = master
         self.db = db
-        self.quarto_selecionado_id = None
+        self.quarto_selecionado_id = None 
 
-        frame = tk.Frame(master)
+        self.primary_bg = "#a5f0f3"  
+        self.secondary_bg = "#a6b8f3" 
+        self.text_color = "#333333" 
+        
+        frame = tk.Frame(master, bg=self.primary_bg)
         frame.pack(fill="both", expand=True)
 
-        label = tk.Label(frame, text="Gerenciamento de Quartos", font=("Arial", 18))
+        label = tk.Label(frame, text="Gerenciamento de Quartos", font=("Arial", 18, "bold"),
+                         bg=self.primary_bg, fg=self.text_color)
         label.pack(pady=10)
 
         # Campos de Entrada para Adicionar/Editar
-        form_frame = tk.Frame(frame)
+        form_frame = tk.Frame(frame, bg=self.primary_bg)
         form_frame.pack(pady=10)
 
-        tk.Label(form_frame, text="Número:").grid(row=0, column=0, padx=5, pady=5)
-        self.entry_numero = tk.Entry(form_frame, width=20)
+        tk.Label(form_frame, text="Número:", bg=self.primary_bg, fg=self.text_color).grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        self.entry_numero = ttk.Entry(form_frame, width=20) 
         self.entry_numero.grid(row=0, column=1, padx=5, pady=5)
 
-        tk.Label(form_frame, text="Tipo:").grid(row=0, column=2, padx=5, pady=5)
+        tk.Label(form_frame, text="Tipo:", bg=self.primary_bg, fg=self.text_color).grid(row=0, column=2, padx=5, pady=5, sticky="w")
         self.combo_tipo = ttk.Combobox(form_frame, width=15, values=["Simples", "Duplo", "Suíte", "Luxo"], state="readonly")
         self.combo_tipo.grid(row=0, column=3, padx=5, pady=5)
 
-        tk.Label(form_frame, text="Preço:").grid(row=1, column=0, padx=5, pady=5)
-        self.entry_preco = tk.Entry(form_frame, width=20)
+        tk.Label(form_frame, text="Preço:", bg=self.primary_bg, fg=self.text_color).grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        self.entry_preco = ttk.Entry(form_frame, width=20) 
         self.entry_preco.grid(row=1, column=1, padx=5, pady=5)
 
-        tk.Label(form_frame, text="Status:").grid(row=1, column=2, padx=5, pady=5)
+        tk.Label(form_frame, text="Status:", bg=self.primary_bg, fg=self.text_color).grid(row=1, column=2, padx=5, pady=5, sticky="w")
         self.combo_status = ttk.Combobox(form_frame, width=15, values=["Disponível", "Ocupado", "Manutenção", "Limpeza"], state="readonly")
         self.combo_status.grid(row=1, column=3, padx=5, pady=5)
 
-
         # Botões de Ação
-        botoes_acao_frame = tk.Frame(frame)
+        botoes_acao_frame = tk.Frame(frame, bg=self.primary_bg)
         botoes_acao_frame.pack(pady=10)
 
-        tk.Button(botoes_acao_frame, text="Adicionar Quarto", width=15, command=self.adicionar_quarto).grid(row=0, column=0, padx=5)
-        tk.Button(botoes_acao_frame, text="Atualizar Quarto", width=15, command=self.atualizar_quarto).grid(row=0, column=1, padx=5)
-        tk.Button(botoes_acao_frame, text="Excluir Quarto", width=15, command=self.excluir_quarto).grid(row=0, column=2, padx=5) 
-        tk.Button(botoes_acao_frame, text="Limpar Campos", width=15, command=self.limpar_campos).grid(row=0, column=3, padx=5)
+        ttk.Button(botoes_acao_frame, text="Adicionar Quarto", command=self.adicionar_quarto).grid(row=0, column=0, padx=5)
+        ttk.Button(botoes_acao_frame, text="Atualizar Quarto", command=self.atualizar_quarto).grid(row=0, column=1, padx=5)
+        ttk.Button(botoes_acao_frame, text="Excluir Quarto", command=self.excluir_quarto).grid(row=0, column=2, padx=5)
+        ttk.Button(botoes_acao_frame, text="Limpar Campos", command=self.limpar_campos).grid(row=0, column=3, padx=5)
 
         # Tabela
         colunas = ("ID", "Número", "Tipo", "Preço", "Status")
@@ -87,9 +91,9 @@ class TelaQuartos:
         selected_item = self.tabela.focus()
         if selected_item:
             valores = self.tabela.item(selected_item, 'values')
-            self.quarto_selecionado_id = valores[0]
+            self.quarto_selecionado_id = valores[0] 
 
-            self.limpar_campos()
+            self.limpar_campos() 
             self.entry_numero.insert(0, valores[1])
             self.combo_tipo.set(valores[2])
             self.entry_preco.insert(0, valores[3])

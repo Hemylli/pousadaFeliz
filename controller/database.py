@@ -12,10 +12,12 @@ class Database:
         
         os.makedirs(data_dir, exist_ok=True)
         
-        self.db_path = os.path.join(data_dir, db_name) 
+        self.db_path = os.path.join(data_dir, db_name)
+        
         self.conexao = sqlite3.connect(self.db_path)
         self.cursor = self.conexao.cursor()
-        self.criar_tabelas() 
+        
+        self.criar_tabelas()
 
     def criar_tabelas(self):
         self.cursor.execute('''
@@ -77,7 +79,7 @@ class Database:
         registros = self.cursor.fetchall()
         return [Hospede(*r) for r in registros]
 
-    def buscar_hospede_por_id(self, id):
+    def buscar_hospede_por_id(self, id): 
         self.cursor.execute('SELECT * FROM hospedes WHERE id = ?', (id,))
         r = self.cursor.fetchone()
         return Hospede(*r) if r else None
@@ -102,10 +104,8 @@ class Database:
         self.conexao.commit()
 
     def excluir_hospede(self, id_hospede):
-        """Exclui um hóspede do banco de dados pelo ID."""
         self.cursor.execute("DELETE FROM hospedes WHERE id = ?", (id_hospede,))
         self.conexao.commit()
-
 
     # ----------------------------
     # CRUD QUARTOS
@@ -128,14 +128,12 @@ class Database:
         return Quarto(*r) if r else None
 
     def alterar_quarto(self, id_quarto, numero=None, tipo=None, preco=None, status=None):
-        """Atualiza um quarto existente no banco de dados."""
         self.cursor.execute('SELECT * FROM quartos WHERE id = ?', (id_quarto,))
         quarto = self.cursor.fetchone()
         if not quarto:
             print(f"Quarto com ID {id_quarto} não encontrado.")
             return
 
-        # Pega os valores atuais se os novos não forem fornecidos
         novo_numero = numero if numero is not None else quarto[1]
         novo_tipo = tipo if tipo is not None else quarto[2]
         novo_preco = preco if preco is not None else quarto[3]
@@ -155,10 +153,8 @@ class Database:
         self.conexao.commit()
     
     def excluir_quarto(self, id_quarto):
-        """Exclui um quarto do banco de dados pelo ID."""
         self.cursor.execute("DELETE FROM quartos WHERE id = ?", (id_quarto,))
         self.conexao.commit()
-
 
     # ----------------------------
     # CRUD RESERVAS
@@ -201,14 +197,12 @@ class Database:
         return reservas
     
     def atualizar_reserva(self, id_reserva, hospede_id, quarto_id, data_entrada, data_saida, status):
-        """Atualiza uma reserva existente no banco de dados."""
         self.cursor.execute("""
             UPDATE reservas
             SET hospede_id = ?, quarto_id = ?, data_entrada = ?, data_saida = ?, status = ?
             WHERE id = ?
         """, (hospede_id, quarto_id, data_entrada, data_saida, status, id_reserva))
         self.conexao.commit()
-        
 
     def alterar_status_reserva(self, reserva_id, novo_status): 
         self.cursor.execute('''
@@ -226,9 +220,9 @@ class Database:
             WHERE quarto_id = ?
             AND status = 'Ativa'
             AND (
-                (data_entrada <= ? AND data_saida > ?) OR  -- Nova reserva começa antes da atual e termina depois
-                (data_entrada < ? AND data_saida >= ?) OR  -- Nova reserva começa antes da atual e termina na atual
-                (data_entrada >= ? AND data_saida <= ?)    -- Nova reserva está contida na atual
+                (data_entrada <= ? AND data_saida > ?) OR 
+                (data_entrada < ? AND data_saida >= ?) OR  
+                (data_entrada >= ? AND data_saida <= ?)    
             )
         '''
         params = [quarto_id, data_saida, data_entrada, data_saida, data_entrada, data_entrada, data_saida]
@@ -241,12 +235,7 @@ class Database:
         conflitos = self.cursor.fetchall()
         return len(conflitos) == 0
 
-
     def listar_periodos_ocupados_quarto(self, quarto_id):
-        """
-        Retorna uma lista de tuplas (data_entrada, data_saida)
-        com os períodos já reservados desse quarto.
-        """
         self.cursor.execute('''
             SELECT data_entrada, data_saida
             FROM reservas
@@ -254,9 +243,9 @@ class Database:
         ''', (quarto_id,))
 
         return self.cursor.fetchall()
-    
+
     # ----------------------------
-    # CRUD FUNCIONÁRIOS
+    # CRUD FUNCIONÁRIOS 
     # ----------------------------
     def cadastrar_funcionario(self, nome, usuario, senha):
         try:
@@ -288,7 +277,7 @@ class Database:
         funcionario_data = self.cursor.fetchone()
         if funcionario_data:
             return Funcionario(*funcionario_data)
-        return None 
+        return None
 
     # ----------------------------
     # FECHAR CONEXÃO
