@@ -110,60 +110,72 @@ class TelaNovaReserva:
             messagebox.showerror("Erro", "Selecione um hóspede e um quarto válidos.")
             return
 
-        # Validação de datas (simples)
+        # Validação de datas
         if data_entrada >= data_saida:
             messagebox.showwarning("Atenção", "A data de saída deve ser posterior à data de entrada.")
             return
         
-        # Verificar disponibilidade do quarto APENAS para novas reservas ou se a data mudou na edição
-        is_available = self.db.verificar_disponibilidade_quarto(quarto_obj.id, data_entrada, data_saida)
-        
-        if not is_available and (not self.reserva_para_editar or \
-                                 (self.reserva_para_editar and (self.reserva_para_editar.data_entrada != data_entrada or \
-                                                               self.reserva_para_editar.data_saida != data_saida or \
-                                                               self.reserva_para_editar.quarto.id != quarto_obj.id))):
-            messagebox.showwarning("Atenção", "Quarto não disponível para o período selecionado.")
-            return
+        quarto_atual_id = self.reserva_para_editar.quarto.id if self.reserva_para_editar else None
+        data_entrada_atual = self.reserva_para_editar.data_entrada if self.reserva_para_editar else None
+        data_saida_atual = self.reserva_para_editar.data_saida if self.reserva_para_editar else None
+
+        if not self.reserva_para_editar or \
+           (quarto_obj.id != quarto_atual_id) or \
+           (data_entrada != data_entrada_atual) or \
+           (data_saida != data_saida_atual):
+            
+            is_available = self.db.verificar_disponibilidade_quarto(quarto_obj.id, data_entrada, data_saida)
+            
+            if not is_available:
+                messagebox.showwarning("Atenção", "Quarto não disponível para o período selecionado.")
+                return
 
         try:
             if self.reserva_para_editar:
+                # Lógica de edição
                 novo_status = self.combo_status.get()
-                if not novo_status: novo_status = self.reserva_para_editar.status # Mantem o status se não for alterado
-                
-                # Exemplo: Se só alterar o status (como seu DB já faz)
-                if novo_status != self.reserva_para_editar.status:
-                     self.db.alterar_status_reserva(self.reserva_para_editar.id, novo_status)
-                     messagebox.showinfo("Sucesso", "Status da reserva atualizado!")
-                else:
-                    messagebox.showinfo("Informação", "Nenhuma alteração de status realizada.")
-                
-                # Se você quiser permitir alterar Hóspede, Quarto, Datas:
-                # 1. Adicione um método ao database.py:
-                #    def atualizar_reserva(self, id_reserva, hospede_id, quarto_id, data_entrada, data_saida, status):
-                #        self.cursor.execute("UPDATE reservas SET hospede_id=?, quarto_id=?, data_entrada=?, data_saida=?, status=? WHERE id=?", 
-                #                            (hospede_id, quarto_id, data_entrada, data_saida, status, id_reserva))
-                #        self.conexao.commit()
-                # 2. Chame aqui:
-                #    self.db.atualizar_reserva(self.reserva_para_editar.id, hospede_obj.id, quarto_obj.id, data_entrada, data_saida, novo_status)
+                if not novo_status: 
+                    novo_status = self.reserva_para_editar.status
+
+                self.db.atualizar_reserva(
+                    id_reserva=self.reserva_para_editar.id,
+                    hospede_id=hospede_obj.id,
+                    quarto_id=quarto_obj.id,
+                    data_entrada=data_entrada,
+                    data_saida=data_saida,
+                    status=novo_status
+                )
+                messagebox.showinfo("Sucesso", "Reserva atualizada com sucesso!")
+
+                # Lógica para atualizar status do quarto (liberar quarto antigo, ocupar novo)
+                if self.reserva_para_editar.status == "Ativa" and novo_status in ["Cancelada", "Finalizada"]:
+                    # Se a reserva original era ativa e foi finalizada/cancelada, liberar o quarto antigo
+                    self.db.alterar_status_quarto(self.reserva_para_editar.quarto.id, "Disponível")
+                elif self.reserva_para_editar.status != "Ativa" and novo_status == "Ativa":
+                    # Se a reserva era inativa e se tornou ativa, ocupar o novo quarto
+                    self.db.alterar_status_quarto(quarto_obj.id, "Ocupado")
+                elif quarto_obj.id != quarto_atual_id: # Se o quarto da reserva mudou
+                    if self.reserva_para_editar.status == "Ativa": # Se a reserva original era ativa, liberar o quarto antigo
+                        self.db.alterar_status_quarto(self.reserva_para_editar.quarto.id, "Disponível")
+                    if novo_status == "Ativa": # Se a nova reserva é ativa, ocupar o novo quarto
+                        self.db.alterar_status_quarto(quarto_obj.id, "Ocupado")
 
 
-            else:
-                # Adicionar nova reserva
+            else: 
                 nova_reserva = Reserva(
                     id=None,
                     hospede=hospede_obj,
                     quarto=quarto_obj,
                     data_entrada=data_entrada,
                     data_saida=data_saida,
-                    status="Ativa" # Nova reserva sempre começa ativa
+                    status="Ativa"
                 )
                 self.db.adicionar_reserva(nova_reserva)
-                # Opcional: mudar status do quarto para 'Ocupado' se necessário
                 self.db.alterar_status_quarto(quarto_obj.id, "Ocupado")
                 messagebox.showinfo("Sucesso", "Reserva adicionada com sucesso!")
             
-            self.callback_carregar_reservas() # Recarrega a tabela na tela principal
-            self.root.destroy() # Fecha a janela de nova reserva
+            self.callback_carregar_reservas()
+            self.root.destroy()
 
         except Exception as e:
             messagebox.showerror("Erro", f"Erro ao salvar reserva: {e}")

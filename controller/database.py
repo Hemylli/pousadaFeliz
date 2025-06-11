@@ -214,28 +214,27 @@ class Database:
     # VERIFICAR DISPONIBILIDADE
     # ----------------------------
 
-    def verificar_disponibilidade_quarto(self, quarto_id, data_entrada, data_saida):
-        """
-        Verifica se um quarto está disponível entre data_entrada e data_saida.
-        Retorna True se disponível, False se ocupado.
-        """
-        self.cursor.execute('''
+    def verificar_disponibilidade_quarto(self, quarto_id, data_entrada, data_saida, id_reserva_ignorar=None):
+        query = '''
             SELECT * FROM reservas
             WHERE quarto_id = ?
             AND status = 'Ativa'
             AND (
-                (data_entrada <= ? AND data_saida > ?) OR
-                (data_entrada < ? AND data_saida >= ?) OR
-                (data_entrada >= ? AND data_saida <= ?)
+                (data_entrada <= ? AND data_saida > ?) OR  -- Nova reserva começa antes da atual e termina depois
+                (data_entrada < ? AND data_saida >= ?) OR  -- Nova reserva começa antes da atual e termina na atual
+                (data_entrada >= ? AND data_saida <= ?)    -- Nova reserva está contida na atual
             )
-        ''', (
-            quarto_id, data_entrada, data_entrada,
-            data_saida, data_saida,
-            data_entrada, data_saida
-        ))
+        '''
+        params = [quarto_id, data_saida, data_entrada, data_saida, data_entrada, data_entrada, data_saida]
+        
+        if id_reserva_ignorar:
+            query += " AND id != ?"
+            params.append(id_reserva_ignorar)
 
+        self.cursor.execute(query, tuple(params))
         conflitos = self.cursor.fetchall()
         return len(conflitos) == 0
+
 
     def listar_periodos_ocupados_quarto(self, quarto_id):
         """
@@ -249,9 +248,9 @@ class Database:
         ''', (quarto_id,))
 
         return self.cursor.fetchall()
-
+    
     # ----------------------------
-    # CRUD FUNCIONÁRIOS 
+    # CRUD FUNCIONÁRIOS
     # ----------------------------
     def cadastrar_funcionario(self, nome, usuario, senha):
         try:
@@ -263,8 +262,8 @@ class Database:
 
     def listar_funcionarios(self):
         self.cursor.execute("SELECT * FROM funcionarios")
-        funcionarios = self.cursor.fetchall()
-        return funcionarios
+        registros = self.cursor.fetchall()
+        return [Funcionario(*r) for r in registros] 
 
     def atualizar_funcionario(self, id_funcionario, nome, usuario, senha):
         self.cursor.execute("""
@@ -280,9 +279,10 @@ class Database:
 
     def autenticar_funcionario(self, usuario, senha):
         self.cursor.execute("SELECT * FROM funcionarios WHERE usuario = ? AND senha = ?", (usuario, senha))
-        funcionario = self.cursor.fetchone()
-        return funcionario is not None
-
+        funcionario_data = self.cursor.fetchone()
+        if funcionario_data:
+            return Funcionario(*funcionario_data)
+        return None 
 
     # ----------------------------
     # FECHAR CONEXÃO

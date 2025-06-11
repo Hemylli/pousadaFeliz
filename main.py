@@ -4,23 +4,12 @@ from app.models.reserva import Reserva
 from controller.database import Database 
 from app.gui.main_window import MainWindow 
 import tkinter as tk
-
-def create_objects():
-    hospede = Hospede(1, "Ana Souza", "12345678900", "21999999999", "ana@gmail.com")
-    quarto = Quarto(1, 101, "Simples", 150.0)
-    reserva = Reserva(1, hospede, quarto, "2025-06-01", "2025-06-05")
-
-    # Testando
-    print(hospede)
-    print(quarto)
-    print(reserva)
-
+from controller.criar_database import criar_e_popular_database 
 
 def bd_conection():
-    # instância do banco de dados
-    db = Database()
+    # Esta função agora é mais para testar a conexão e listagem após a criação
+    db = Database() # Conecta ao banco de dados já populado
 
-    # Testes de listagem
     print("=== HÓSPEDES ===")
     for h in db.listar_hospedes():
         print(h)
@@ -33,13 +22,18 @@ def bd_conection():
     for r in db.listar_reservas():
         print(r)
 
-# Instância global 
+    db.fechar_conexao() 
+
+
 db_instance = None
 
 if __name__ == "__main__":
+    # Cria e popula o banco de dados se necessário.
+    criar_e_popular_database() 
     # Cria a instância do banco de dados UMA VEZ
     db_instance = Database()
 
+    # Inicia a interface gráfica
     root = tk.Tk()
     app = MainWindow(root, db_instance)
     root.mainloop()
