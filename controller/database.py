@@ -2,6 +2,7 @@ import sqlite3
 from app.models.hospede import Hospede
 from app.models.quarto import Quarto
 from app.models.reserva import Reserva
+from app.models.funcionario import Funcionario 
 
 class Database:
     def __init__(self, db_path="data/pousada.db"):
@@ -44,8 +45,7 @@ class Database:
             )
         ''')
 
-        # Tabela Funcionarios
-        cursor.execute("""
+        self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS funcionarios (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 nome TEXT NOT NULL,
@@ -71,6 +71,36 @@ class Database:
         registros = self.cursor.fetchall()
         return [Hospede(*r) for r in registros]
 
+    def buscar_hospede_por_id(self, id):
+        self.cursor.execute('SELECT * FROM hospedes WHERE id = ?', (id,))
+        r = self.cursor.fetchone()
+        return Hospede(*r) if r else None
+
+    def alterar_hospede(self, hospede_id, nome=None, cpf=None, telefone=None, email=None):
+        self.cursor.execute('SELECT * FROM hospedes WHERE id = ?', (hospede_id,))
+        hospede = self.cursor.fetchone()
+        if not hospede:
+            print("Hóspede não encontrado.")
+            return
+
+        novo_nome = nome if nome else hospede[1]
+        novo_cpf = cpf if cpf else hospede[2]
+        novo_telefone = telefone if telefone else hospede[3]
+        novo_email = email if email else hospede[4]
+
+        self.cursor.execute('''
+            UPDATE hospedes
+            SET nome = ?, cpf = ?, telefone = ?, email = ?
+            WHERE id = ?
+        ''', (novo_nome, novo_cpf, novo_telefone, novo_email, hospede_id))
+        self.conexao.commit()
+
+    def excluir_hospede(self, id_hospede):
+        """Exclui um hóspede do banco de dados pelo ID."""
+        self.cursor.execute("DELETE FROM hospedes WHERE id = ?", (id_hospede,))
+        self.conexao.commit()
+
+
     # ----------------------------
     # CRUD QUARTOS
     # ----------------------------
@@ -85,6 +115,44 @@ class Database:
         self.cursor.execute('SELECT * FROM quartos')
         registros = self.cursor.fetchall()
         return [Quarto(*r) for r in registros]
+    
+    def buscar_quarto_por_id(self, id): 
+        self.cursor.execute('SELECT * FROM quartos WHERE id = ?', (id,))
+        r = self.cursor.fetchone()
+        return Quarto(*r) if r else None
+
+    def alterar_quarto(self, id_quarto, numero=None, tipo=None, preco=None, status=None):
+        """Atualiza um quarto existente no banco de dados."""
+        self.cursor.execute('SELECT * FROM quartos WHERE id = ?', (id_quarto,))
+        quarto = self.cursor.fetchone()
+        if not quarto:
+            print(f"Quarto com ID {id_quarto} não encontrado.")
+            return
+
+        # Pega os valores atuais se os novos não forem fornecidos
+        novo_numero = numero if numero is not None else quarto[1]
+        novo_tipo = tipo if tipo is not None else quarto[2]
+        novo_preco = preco if preco is not None else quarto[3]
+        novo_status = status if status is not None else quarto[4]
+
+        self.cursor.execute('''
+            UPDATE quartos
+            SET numero = ?, tipo = ?, preco = ?, status = ?
+            WHERE id = ?
+        ''', (novo_numero, novo_tipo, novo_preco, novo_status, id_quarto))
+        self.conexao.commit()
+
+    def alterar_status_quarto(self, quarto_id, novo_status): 
+        self.cursor.execute('''
+            UPDATE quartos SET status = ? WHERE id = ?
+        ''', (novo_status, quarto_id))
+        self.conexao.commit()
+    
+    def excluir_quarto(self, id_quarto):
+        """Exclui um quarto do banco de dados pelo ID."""
+        self.cursor.execute("DELETE FROM quartos WHERE id = ?", (id_quarto,))
+        self.conexao.commit()
+
 
     # ----------------------------
     # CRUD RESERVAS
@@ -125,53 +193,21 @@ class Database:
                 reservas.append(reserva)
 
         return reservas
+    
+    def atualizar_reserva(self, id_reserva, hospede_id, quarto_id, data_entrada, data_saida, status):
+        """Atualiza uma reserva existente no banco de dados."""
+        self.cursor.execute("""
+            UPDATE reservas
+            SET hospede_id = ?, quarto_id = ?, data_entrada = ?, data_saida = ?, status = ?
+            WHERE id = ?
+        """, (hospede_id, quarto_id, data_entrada, data_saida, status, id_reserva))
+        self.conexao.commit()
+        
 
-    # ----------------------------
-    # BUSCAS AUXILIARES
-    # ----------------------------
-    def buscar_hospede_por_id(self, id):
-        self.cursor.execute('SELECT * FROM hospedes WHERE id = ?', (id,))
-        r = self.cursor.fetchone()
-        return Hospede(*r) if r else None
-
-    def buscar_quarto_por_id(self, id):
-        self.cursor.execute('SELECT * FROM quartos WHERE id = ?', (id,))
-        r = self.cursor.fetchone()
-        return Quarto(*r) if r else 
-
-    # ----------------------------
-    # ALTERAÇÕES DE DADOS
-    # ----------------------------
-
-    def alterar_status_reserva(self, reserva_id, novo_status):
+    def alterar_status_reserva(self, reserva_id, novo_status): 
         self.cursor.execute('''
             UPDATE reservas SET status = ? WHERE id = ?
         ''', (novo_status, reserva_id))
-        self.conexao.commit()
-
-    def alterar_status_quarto(self, quarto_id, novo_status):
-        self.cursor.execute('''
-            UPDATE quartos SET status = ? WHERE id = ?
-        ''', (novo_status, quarto_id))
-        self.conexao.commit()
-
-    def alterar_hospede(self, hospede_id, nome=None, cpf=None, telefone=None, email=None):
-        self.cursor.execute('SELECT * FROM hospedes WHERE id = ?', (hospede_id,))
-        hospede = self.cursor.fetchone()
-        if not hospede:
-            print("Hóspede não encontrado.")
-            return
-
-        novo_nome = nome if nome else hospede[1]
-        novo_cpf = cpf if cpf else hospede[2]
-        novo_telefone = telefone if telefone else hospede[3]
-        novo_email = email if email else hospede[4]
-
-        self.cursor.execute('''
-            UPDATE hospedes
-            SET nome = ?, cpf = ?, telefone = ?, email = ?
-            WHERE id = ?
-        ''', (novo_nome, novo_cpf, novo_telefone, novo_email, hospede_id))
         self.conexao.commit()
 
     # ----------------------------
@@ -215,57 +251,36 @@ class Database:
         return self.cursor.fetchall()
 
     # ----------------------------
-    # CRUD FUNCIONÁRIOS
+    # CRUD FUNCIONÁRIOS 
     # ----------------------------
-    # Cadastrar funcionário
-    def cadastrar_funcionario(nome, usuario, senha):
-        conn = conectar()
-        cursor = conn.cursor()
+    def cadastrar_funcionario(self, nome, usuario, senha):
         try:
-            cursor.execute("INSERT INTO funcionarios (nome, usuario, senha) VALUES (?, ?, ?)", (nome, usuario, senha))
-            conn.commit()
+            self.cursor.execute("INSERT INTO funcionarios (nome, usuario, senha) VALUES (?, ?, ?)", (nome, usuario, senha))
+            self.conexao.commit()
             return True
         except sqlite3.IntegrityError:
             return False
-        finally:
-            desconectar(conn)
 
-    # Listar todos os funcionários
-    def listar_funcionarios():
-        conn = conectar()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM funcionarios")
-        funcionarios = cursor.fetchall()
-        desconectar(conn)
+    def listar_funcionarios(self):
+        self.cursor.execute("SELECT * FROM funcionarios")
+        funcionarios = self.cursor.fetchall()
         return funcionarios
 
-    # Atualizar funcionário
-    def atualizar_funcionario(id_funcionario, nome, usuario, senha):
-        conn = conectar()
-        cursor = conn.cursor()
-        cursor.execute("""
-            UPDATE funcionarios 
-            SET nome = ?, usuario = ?, senha = ? 
+    def atualizar_funcionario(self, id_funcionario, nome, usuario, senha):
+        self.cursor.execute("""
+            UPDATE funcionarios
+            SET nome = ?, usuario = ?, senha = ?
             WHERE id = ?
         """, (nome, usuario, senha, id_funcionario))
-        conn.commit()
-        desconectar(conn)
+        self.conexao.commit()
 
-    # Excluir funcionário
-    def excluir_funcionario(id_funcionario):
-        conn = conectar()
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM funcionarios WHERE id = ?", (id_funcionario,))
-        conn.commit()
-        desconectar(conn)
+    def excluir_funcionario(self, id_funcionario):
+        self.cursor.execute("DELETE FROM funcionarios WHERE id = ?", (id_funcionario,))
+        self.conexao.commit()
 
-    # Autenticar login
-    def autenticar_funcionario(usuario, senha):
-        conn = conectar()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM funcionarios WHERE usuario = ? AND senha = ?", (usuario, senha))
-        funcionario = cursor.fetchone()
-        desconectar(conn)
+    def autenticar_funcionario(self, usuario, senha):
+        self.cursor.execute("SELECT * FROM funcionarios WHERE usuario = ? AND senha = ?", (usuario, senha))
+        funcionario = self.cursor.fetchone()
         return funcionario is not None
 
 

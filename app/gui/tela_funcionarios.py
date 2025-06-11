@@ -1,19 +1,21 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from controller import database
-
+from controller.database import Database 
 
 class TelaFuncionarios:
-    def __init__(self):
-        self.root = tk.Toplevel()
+    def __init__(self, master, db: Database): 
+        self.master = master 
+        self.db = db 
+        self.root = tk.Toplevel(master) # A Toplevel deve ser filha de outra janela Tkinter
         self.root.title("Gerenciamento de Funcionários")
         self.root.geometry("600x400")
         self.root.resizable(False, False)
 
+        self.id_selecionado = None # Inicializa para evitar AttributeError
+
         self.criar_widgets()
         self.carregar_funcionarios()
 
-        self.root.mainloop()
 
     def criar_widgets(self):
         # Labels e Entrys
@@ -56,7 +58,7 @@ class TelaFuncionarios:
         senha = self.entry_senha.get()
 
         if nome and usuario and senha:
-            sucesso = database.cadastrar_funcionario(nome, usuario, senha)
+            sucesso = self.db.cadastrar_funcionario(nome, usuario, senha)
             if sucesso:
                 messagebox.showinfo("Sucesso", "Funcionário cadastrado com sucesso!")
                 self.limpar_campos()
@@ -70,7 +72,7 @@ class TelaFuncionarios:
         for i in self.tabela.get_children():
             self.tabela.delete(i)
 
-        funcionarios = database.listar_funcionarios()
+        funcionarios = self.db.listar_funcionarios()
         for funcionario in funcionarios:
             self.tabela.insert("", "end", values=funcionario)
 
@@ -99,7 +101,7 @@ class TelaFuncionarios:
         senha = self.entry_senha.get()
 
         if nome and usuario and senha:
-            database.atualizar_funcionario(id_funcionario, nome, usuario, senha)
+            self.db.atualizar_funcionario(id_funcionario, nome, usuario, senha)
             messagebox.showinfo("Sucesso", "Funcionário atualizado com sucesso!")
             self.limpar_campos()
             self.carregar_funcionarios()
@@ -115,7 +117,7 @@ class TelaFuncionarios:
 
         confirmacao = messagebox.askyesno("Confirmação", "Deseja excluir este funcionário?")
         if confirmacao:
-            database.excluir_funcionario(id_funcionario)
+            self.db.excluir_funcionario(id_funcionario)
             messagebox.showinfo("Sucesso", "Funcionário excluído com sucesso!")
             self.limpar_campos()
             self.carregar_funcionarios()

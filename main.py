@@ -1,8 +1,8 @@
 from app.models.hospede import Hospede
 from app.models.quarto import Quarto
 from app.models.reserva import Reserva
-from controller.database import Database
-from app.gui.main_window import MainWindow
+from controller.database import Database 
+from app.gui.main_window import MainWindow 
 import tkinter as tk
 
 def create_objects():
@@ -17,9 +17,10 @@ def create_objects():
 
 
 def bd_conection():
+    # instância do banco de dados
     db = Database()
 
-    # Listando dados
+    # Testes de listagem
     print("=== HÓSPEDES ===")
     for h in db.listar_hospedes():
         print(h)
@@ -32,11 +33,17 @@ def bd_conection():
     for r in db.listar_reservas():
         print(r)
 
-    db.fechar_conexao()
-
+# Instância global 
+db_instance = None
 
 if __name__ == "__main__":
-    bd_conection()
+    # Cria a instância do banco de dados UMA VEZ
+    db_instance = Database()
+
     root = tk.Tk()
-    app = MainWindow(root)
+    app = MainWindow(root, db_instance)
     root.mainloop()
+
+    # Fechar a conexão quando a aplicação Tkinter for encerrada
+    if db_instance:
+        db_instance.fechar_conexao()
