@@ -6,8 +6,8 @@ from controller.database import Database
 
 def criar_e_popular_database(db_name="pousada.db"):
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(base_dir) # Sobe para a raiz do projeto (pousadaFeliz/)
-    data_dir = os.path.join(project_root, 'data') # Pasta data na raiz
+    project_root = os.path.dirname(base_dir)
+    data_dir = os.path.join(project_root, 'data') 
     
     os.makedirs(data_dir, exist_ok=True)
     
@@ -23,7 +23,7 @@ def criar_e_popular_database(db_name="pousada.db"):
 
     print(f"Banco de dados '{db_name}' não encontrado ou foi removido. Criando e populando...")
 
-    # Instancia o Database (que criará as tabelas no novo DB vazio)
+    # Instancia o Database 
     db = Database(db_name) 
 
     # --- INÍCIO DA POPULAÇÃO DE DADOS ---

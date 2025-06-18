@@ -210,6 +210,26 @@ class Database:
         ''', (novo_status, reserva_id))
         self.conexao.commit()
 
+    def buscar_reserva_por_id(self, id_reserva):
+        """Busca uma reserva pelo ID e retorna um objeto Reserva."""
+        self.cursor.execute('SELECT id, hospede_id, quarto_id, data_entrada, data_saida, status FROM reservas WHERE id = ?', (id_reserva,))
+        r = self.cursor.fetchone()
+        if r:
+            # Reconstroi o objeto Reserva, buscando hospede e quarto por ID
+            id_reserva, hospede_id, quarto_id, data_entrada, data_saida, status = r
+            hospede = self.buscar_hospede_por_id(hospede_id)
+            quarto = self.buscar_quarto_por_id(quarto_id)
+            if hospede and quarto:
+                return Reserva(
+                    id=id_reserva,
+                    hospede=hospede,
+                    quarto=quarto,
+                    data_entrada=data_entrada,
+                    data_saida=data_saida,
+                    status=status
+                )
+        return None
+
     # ----------------------------
     # VERIFICAR DISPONIBILIDADE
     # ----------------------------

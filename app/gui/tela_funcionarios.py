@@ -1,60 +1,76 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from controller.database import Database
-from app.models.funcionario import Funcionario # Importa o modelo Funcionario
+from app.models.funcionario import Funcionario 
 
 class TelaFuncionarios:
     def __init__(self, master, db: Database):
         self.master = master
         self.db = db 
         
-        self.primary_bg = "#a5f0f3"  
-        self.secondary_bg = "#a6b8f3" 
-        self.text_color = "#333333"  
+        self.general_bg = "#f0f1f1"  
+        self.purple_color = "#A679E3" 
+        self.cyan_color = "#80FFFF" 
+        self.text_dark = "black"  
         
-        self.root = tk.Toplevel(master) # Tela de funcionários é uma Toplevel
-        self.root.title("Gerenciamento de Funcionários")
-        self.root.geometry("600x400")
-        self.root.resizable(False, False)
-        self.root.config(bg=self.primary_bg) # Fundo da janela top-level
+        self.frame = tk.Frame(master, bg=self.general_bg)
+        self.frame.pack(fill="both", expand=True)
 
         self.id_selecionado = None
 
-        frame = tk.Frame(self.root, bg=self.primary_bg) # Frame principal da tela
-        frame.pack(fill="both", expand=True)
-
-        label = tk.Label(frame, text="Gerenciamento de Funcionários", font=("Arial", 18, "bold"),
-                         bg=self.primary_bg, fg=self.text_color)
+        label = tk.Label(self.frame, text="Gerenciamento de Funcionários", font=("Arial", 16, "bold"),
+                         bg=self.general_bg, fg=self.text_dark)
         label.pack(pady=10)
 
-        # Labels e Entrys
-        form_frame = tk.Frame(frame, bg=self.primary_bg)
+        # Labels e Entrys 
+        form_frame = tk.Frame(self.frame, bg=self.general_bg, padx=20, pady=10) 
         form_frame.pack(pady=10)
 
-        tk.Label(form_frame, text="Nome:", bg=self.primary_bg, fg=self.text_color).grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        self.entry_nome = ttk.Entry(form_frame, width=30)
-        self.entry_nome.grid(row=0, column=1, padx=5, pady=5)
+        tk.Label(form_frame, text="Nome:", bg=self.general_bg, fg=self.text_dark).grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        self.entry_nome = tk.Entry(form_frame, width=30, bg="white", fg="black") 
+        self.entry_nome.grid(row=0, column=1, padx=5, pady=5, sticky="ew") 
 
-        tk.Label(form_frame, text="Usuário:", bg=self.primary_bg, fg=self.text_color).grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        self.entry_usuario = ttk.Entry(form_frame, width=30)
-        self.entry_usuario.grid(row=1, column=1, padx=5, pady=5)
+        tk.Label(form_frame, text="Usuário:", bg=self.general_bg, fg=self.text_dark).grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        self.entry_usuario = tk.Entry(form_frame, width=30, bg="white", fg="black") 
+        self.entry_usuario.grid(row=1, column=1, padx=5, pady=5, sticky="ew") 
 
-        tk.Label(form_frame, text="Senha:", bg=self.primary_bg, fg=self.text_color).grid(row=2, column=0, padx=5, pady=5, sticky="w")
-        self.entry_senha = ttk.Entry(form_frame, width=30, show="*")
-        self.entry_senha.grid(row=2, column=1, padx=5, pady=5)
+        tk.Label(form_frame, text="Senha:", bg=self.general_bg, fg=self.text_dark).grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        self.entry_senha = tk.Entry(form_frame, width=30, show="*", bg="white", fg="black") 
+        self.entry_senha.grid(row=2, column=1, padx=5, pady=5, sticky="ew") 
 
-        # Botões
-        botoes_frame = tk.Frame(frame, bg=self.primary_bg)
+        # Configurar expansão de colunas
+        form_frame.grid_columnconfigure(1, weight=1) 
+
+        # Botões 
+        botoes_frame = tk.Frame(self.frame, bg=self.general_bg)
         botoes_frame.pack(pady=10)
 
-        ttk.Button(botoes_frame, text="Adicionar", command=self.adicionar_funcionario).grid(row=0, column=0, padx=5)
-        ttk.Button(botoes_frame, text="Atualizar", command=self.atualizar_funcionario).grid(row=0, column=1, padx=5)
-        ttk.Button(botoes_frame, text="Excluir", command=self.excluir_funcionario).grid(row=0, column=2, padx=5)
-        ttk.Button(botoes_frame, text="Limpar Campos", command=self.limpar_campos).grid(row=0, column=3, padx=5)
+        button_options = {
+            "font": ("Arial", 10), "bg": self.purple_color, "fg": "white", 
+            "activebackground": self.cyan_color, "activeforeground": "white",
+            "bd": 1, "relief": "raised", "padx": 8, "pady": 4, "cursor": "hand2"
+        }
+        tk.Button(botoes_frame, text="Adicionar", command=self.adicionar_funcionario, **button_options).grid(row=0, column=0, padx=5)
+        tk.Button(botoes_frame, text="Atualizar", command=self.atualizar_funcionario, **button_options).grid(row=0, column=1, padx=5)
+        tk.Button(botoes_frame, text="Excluir", command=self.excluir_funcionario, **button_options).grid(row=0, column=2, padx=5)
+        tk.Button(botoes_frame, text="Limpar Campos", command=self.limpar_campos, **button_options).grid(row=0, column=3, padx=5)
 
 
-        # Tabela
-        self.tabela = ttk.Treeview(frame, columns=("ID", "Nome", "Usuário", "Senha"), show="headings")
+        # Tabela 
+        self.tabela = ttk.Treeview(self.frame, columns=("ID", "Nome", "Usuário", "Senha"), show="headings")
+
+        # Estilo básico para Treeview e Heading
+        style = ttk.Style()
+        try: 
+            style.theme_use('clam')
+        except tk.TclError:
+            style.theme_use('default')
+        style.configure("Treeview", background="white", foreground=self.text_dark, fieldbackground="white")
+        style.configure("Treeview.Heading", background=self.purple_color, foreground="white", font=('Arial', 10, 'bold'))
+        style.map('Treeview', background=[('selected', self.purple_color)]) 
+        style.map("Treeview.Heading", background=[('active', self.cyan_color)], foreground=[('active', self.text_dark)])
+
+
         self.tabela.heading("ID", text="ID")
         self.tabela.heading("Nome", text="Nome")
         self.tabela.heading("Usuário", text="Usuário")
@@ -65,7 +81,7 @@ class TelaFuncionarios:
         self.tabela.column("Usuário", width=150)
         self.tabela.column("Senha", width=150)
 
-        self.tabela.pack(fill="both", expand=True, padx=20, pady=20)
+        self.tabela.pack(fill="both", expand=True, padx=10, pady=10)
         self.tabela.bind("<ButtonRelease-1>", self.selecionar_linha)
 
         self.carregar_funcionarios()
@@ -97,18 +113,25 @@ class TelaFuncionarios:
     def selecionar_linha(self, event):
         selected_item = self.tabela.focus()
         if selected_item:
+            # Limpa os campos de entrada primeiro
+            self.entry_nome.delete(0, tk.END)
+            self.entry_usuario.delete(0, tk.END)
+            self.entry_senha.delete(0, tk.END)
+
+            # Pega os valores e define o ID selecionado
             valores = self.tabela.item(selected_item, "values")
             self.id_selecionado = valores[0]
 
-            self.limpar_campos()
+            # Preenche os campos com os novos valores
             self.entry_nome.insert(0, valores[1])
             self.entry_usuario.insert(0, valores[2])
             self.entry_senha.insert(0, valores[3])
         else:
-            self.id_selecionado = None
+            # Se nada for selecionado, limpa tudo
+            self.limpar_campos()
 
     def atualizar_funcionario(self):
-        if not hasattr(self, 'id_selecionado') or not self.id_selecionado:
+        if not self.id_selecionado:
             messagebox.showwarning("Atenção", "Selecione um funcionário para atualizar.")
             return
 
@@ -116,19 +139,20 @@ class TelaFuncionarios:
         usuario = self.entry_usuario.get()
         senha = self.entry_senha.get()
 
-        if nome and usuario and senha:
-            try:
-                self.db.atualizar_funcionario(self.id_selecionado, nome, usuario, senha)
-                messagebox.showinfo("Sucesso", "Funcionário atualizado com sucesso!")
-                self.limpar_campos()
-                self.carregar_funcionarios()
-            except Exception as e:
-                messagebox.showerror("Erro", f"Erro ao atualizar funcionário: {e}")
-        else:
+        if not (nome and usuario and senha):
             messagebox.showwarning("Atenção", "Preencha todos os campos.")
+            return
+        
+        try:
+            self.db.atualizar_funcionario(self.id_selecionado, nome, usuario, senha)
+            messagebox.showinfo("Sucesso", "Funcionário atualizado com sucesso!")
+            self.limpar_campos()
+            self.carregar_funcionarios()
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao atualizar funcionário: {e}")
 
     def excluir_funcionario(self):
-        if not hasattr(self, 'id_selecionado') or not self.id_selecionado:
+        if not self.id_selecionado:
             messagebox.showwarning("Atenção", "Selecione um funcionário para excluir.")
             return
 
